@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Memory Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            width: 400px;
+            min-height: 500px;
+        }
+
+        .container {
+            padding: 16px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .search-section {
+            margin-bottom: 20px;
+        }
+
+        .search-input-container {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .search-button {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .search-button:hover {
+            background: #2980b9;
+        }
+
+        .search-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 12px;
+            background: white;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+
+        .results-section {
+            margin-bottom: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .results-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .results-count {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .results-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .result-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .result-item:hover {
+            background: #f8f9fa;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .result-url {
+            font-size: 11px;
+            color: #3498db;
+            margin-bottom: 4px;
+            text-decoration: none;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .result-snippet {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .result-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-score {
+            font-size: 11px;
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-button {
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: white;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .empty-text {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .actions-section {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-button-full {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .action-button-full:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #fcc;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #cfc;
+        }
+
+        .highlight-button {
+            background: #27ae60;
+        }
+
+        .highlight-button:hover {
+            background: #219a52;
+            border-color: #219a52;
+        }
+
+        /* Scrollbar styling */
+        .results-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .results-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .results-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .results-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Web Memory</h1>
+            <p>AI-powered web page memory and search</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-input-container">
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="search-input"
+                    placeholder="Search your web memory..."
+                    autocomplete="off"
+                >
+                <button id="searchButton" class="search-button">🔍</button>
+            </div>
+
+            <div class="filters">
+                <select id="contentTypeFilter" class="filter-select">
+                    <option value="">All Types</option>
+                    <option value="article">Articles</option>
+                    <option value="documentation">Documentation</option>
+                    <option value="ecommerce">Shopping</option>
+                    <option value="news">News</option>
+                    <option value="code">Code</option>
+                </select>
+
+                <select id="dateFilter" class="filter-select">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPages">-</div>
+                <div class="stat-label">Pages Indexed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalSearches">-</div>
+                <div class="stat-label">Searches</div>
+            </div>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-title">Search Results</div>
+                <div class="results-count" id="resultsCount">0 results</div>
+            </div>
+
+            <div id="resultsContainer" class="results-container">
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <div class="empty-title">Start Searching</div>
+                    <div class="empty-text">
+                        Enter a search query to find pages from your web memory.<br>
+                        Results will appear here as you browse the web.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-section">
+            <button id="indexCurrentPage" class="action-button-full">
+                📄 Index Current Page
+            </button>
+            <button id="forceIndex" class="action-button-full" style="background: #e74c3c;">
+                🔥 FORCE INDEX THIS PAGE
+            </button>
+            <button id="exportButton" class="action-button-full">
+                📤 Export Data
+            </button>
+            <button id="settingsButton" class="action-button-full">
+                ⚙️ Settings
+            </button>
+        </div>
+
+        <!-- Settings Panel (Hidden by default) -->
+        <div id="settingsPanel" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <h3 style="font-size: 16px; margin-bottom: 12px; color: #2c3e50;">Gemini API Configuration</h3>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Gemini API Key</label>
+                <input
+                    type="password"
+                    id="geminiApiKey"
+                    placeholder="Enter your Gemini API key"
+                    style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;"
+                >
+                <div style="font-size: 10px; color: #95a5a6; margin-top: 4px;">
+                    Get your API key from <a href="https://aistudio.google.com" target="_blank" style="color: #3498db;">Google AI Studio</a>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Embedding Model</label>
+                <select id="geminiModel"
+                    style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;">
+                    <option value="gemini-embedding-001">gemini-embedding-001 (3072D - Recommended)</option>
+                    <option value="text-embedding-004">text-embedding-004 (768D)</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button id="saveSettings" style="flex: 1; padding: 8px; background: #27ae60; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                    💾 Save Settings
+                </button>
+                <button id="cancelSettings" style="flex: 1; padding: 8px; background: #95a5a6; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
